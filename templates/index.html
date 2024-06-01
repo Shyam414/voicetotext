@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voice to Text Converter</title>
+</head>
+<body>
+    <h1>Convert Voice Input to Text</h1>
+    <button id="startButton">Start Recording</button>
+    <button id="stopButton" disabled>Stop Recording</button>
+    <h2>Converted Text:</h2>
+    <div id="result"></div>
+
+    <script>
+        let recognition;
+        const startButton = document.getElementById('startButton');
+        const stopButton = document.getElementById('stopButton');
+        const resultDiv = document.getElementById('result');
+
+        // Check if there is any transcribed text in local storage
+        if (localStorage.getItem('transcription')) {
+            resultDiv.innerText = localStorage.getItem('transcription');
+        }
+
+        startButton.addEventListener('click', startRecording);
+
+        stopButton.addEventListener('click', stopRecording);
+
+        function startRecording() {
+            startButton.disabled = true;
+            stopButton.disabled = false;
+            resultDiv.innerText = 'Listening...';
+
+            recognition = new window.webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+
+            recognition.onresult = function(event) {
+                let transcript = '';
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    if (event.results[i].isFinal) {
+                        transcript += event.results[i][0].transcript + ' '; // Add space between each final result
+                    } else {
+                        transcript += event.results[i][0].transcript;
+                        resultDiv.innerText = transcript;
+                    }
+                }
+                // Save the transcription to local storage
+                localStorage.setItem('transcription', transcript);
+            };
+
+            recognition.onerror = function(event) {
+                resultDiv.innerText = 'Error occurred. Please try again.';
+                stopRecording();
+            };
+
+            recognition.onend = function() {
+                startButton.disabled = false;
+                stopButton.disabled = true;
+            };
+
+            recognition.start();
+        }
+
+        function stopRecording() {
+            recognition.stop();
+        }
+    </script>
+</body>
+</html>
